@@ -18,21 +18,21 @@ const pool = new Pool({
  * @param {String} email The email of the user.
  * @return {Promise<{}>} A promise to the user.
  */
-const getUserWithEmail = function(email) {
+const getUserWithEmail = function (email) {
   console.log("EMAIL CHECK");
   return pool.query(`
   SELECT email
   FROM users
   WHERE email = $1
   `, [email])
-  .then(res => {
-    if (res.rows[0]) {
-      console.log("EMAIL LOOKS GOOD");
-      return res.rows[0]
-    } else {
-      return null;
-    }
-  });
+    .then(res => {
+      if (res.rows[0]) {
+        console.log("EMAIL LOOKS GOOD");
+        return res.rows[0]
+      } else {
+        return null;
+      }
+    });
 }
 exports.getUserWithEmail = getUserWithEmail;
 
@@ -42,20 +42,20 @@ exports.getUserWithEmail = getUserWithEmail;
  * @return {Promise<{}>} A promise to the user.
  */
 
-const getUserWithId = function(id) {
+const getUserWithId = function (id) {
   console.log("USERID CHECK");
   return pool.query(`
   SELECT id
   FROM users
   WHERE id = $1
   `, [id])
-  .then(res => {
-    if (res.rows[0]) {
-      return res.rows[0]
-    } else {
-      return null;
-    }
-  });
+    .then(res => {
+      if (res.rows[0]) {
+        return res.rows[0]
+      } else {
+        return null;
+      }
+    });
 }
 exports.getUserWithId = getUserWithId;
 
@@ -66,7 +66,7 @@ exports.getUserWithId = getUserWithId;
  * @return {Promise<{}>} A promise to the user.
  */
 
-const addUser =  function(user) {
+const addUser = function (user) {
   console.log("ADD USER CHECK");
   const data = [user.name, user.email, user.password]
   return pool.query(`
@@ -74,13 +74,13 @@ const addUser =  function(user) {
   VALUES ($1, $2, $3)
   RETURNING *
   `, data)
-  .then(res => {
-    if (res.rows[0].name || res.rows[0].email) {
-      return res.rows[0]
-    } else {
-      console.log("incorrect information");
-    }
-  });
+    .then(res => {
+      if (res.rows[0].name || res.rows[0].email) {
+        return res.rows[0]
+      } else {
+        console.log("incorrect information");
+      }
+    });
   // ADD AN IF STATEMENT CHECKING IF user.name EXists in our DB
 }
 exports.addUser = addUser;
@@ -92,8 +92,19 @@ exports.addUser = addUser;
  * @param {string} guest_id The id of the user.
  * @return {Promise<[{}]>} A promise to the reservations.
  */
-const getAllReservations = function(guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+const getAllReservations = function (guest_id, limit = 10) {
+  return pool.query(`
+    SELECT reservations.id, properties.number_of_bedrooms, properties.number_of_bathrooms, properties.title, properties.parking_spaces, property_reviews.rating, properties.cost_per_night, reservations.start_date, reservations.end_date
+    FROM reservations
+    JOIN properties On reservations.property_id = properties.id
+    JOIN property_reviews ON property_reviews.property_id = properties.id
+    WHERE reservations.guest_id = $1
+    LIMIT $2`
+    , [1, limit])
+    //
+    //NEED TO FIX SO WE CAN ADD A GUEST ID!!!!!!!!!!!!!!!!!!!
+    //
+    .then(res => res.rows);
 }
 exports.getAllReservations = getAllReservations;
 
@@ -106,12 +117,12 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 
-const getAllProperties = function(options, limit = 10) {
+const getAllProperties = function (options, limit = 10) {
   return pool.query(`
   SELECT * FROM properties
   LIMIT $1
   `, [limit])
-  .then(res => res.rows);
+    .then(res => res.rows);
 }
 exports.getAllProperties = getAllProperties;
 
@@ -139,7 +150,7 @@ exports.getAllProperties = getAllProperties;
  * @param {{}} property An object containing all of the property details.
  * @return {Promise<{}>} A promise to the property.
  */
-const addProperty = function(property) {
+const addProperty = function (property) {
   const propertyId = Object.keys(properties).length + 1;
   property.id = propertyId;
   properties[propertyId] = property;
